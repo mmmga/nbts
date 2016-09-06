@@ -5,15 +5,15 @@
 namespace ts {
     /** The version of the TypeScript compiler release */
 
-    export const version = "2.0.2";
+    export const version = "2.0.5";
 
     const emptyArray: any[] = [];
 
     const defaultTypeRoots = ["node_modules/@types"];
 
-    export function findConfigFile(searchPath: string, fileExists: (fileName: string) => boolean): string {
+    export function findConfigFile(searchPath: string, fileExists: (fileName: string) => boolean, configName = "tsconfig.json"): string {
         while (true) {
-            const fileName = combinePaths(searchPath, "tsconfig.json");
+            const fileName = combinePaths(searchPath, configName);
             if (fileExists(fileName)) {
                 return fileName;
             }
@@ -169,22 +169,19 @@ namespace ts {
 
     const typeReferenceExtensions = [".d.ts"];
 
-    function getEffectiveTypeRoots(options: CompilerOptions, host: ModuleResolutionHost) {
+    export function getEffectiveTypeRoots(options: CompilerOptions, currentDirectory: string) {
         if (options.typeRoots) {
             return options.typeRoots;
         }
 
-        let currentDirectory: string;
         if (options.configFilePath) {
             currentDirectory = getDirectoryPath(options.configFilePath);
-        }
-        else if (host.getCurrentDirectory) {
-            currentDirectory = host.getCurrentDirectory();
         }
 
         if (!currentDirectory) {
             return undefined;
         }
+
         return map(defaultTypeRoots, d => combinePaths(currentDirectory, d));
     }
 
@@ -202,7 +199,7 @@ namespace ts {
             traceEnabled
         };
 
-        const typeRoots = getEffectiveTypeRoots(options, host);
+        const typeRoots = getEffectiveTypeRoots(options, host.getCurrentDirectory && host.getCurrentDirectory());
         if (traceEnabled) {
             if (containingFile === undefined) {
                 if (typeRoots === undefined) {
@@ -1064,7 +1061,7 @@ namespace ts {
         // Walk the primary type lookup locations
         const result: string[] = [];
         if (host.directoryExists && host.getDirectories) {
-            const typeRoots = getEffectiveTypeRoots(options, host);
+            const typeRoots = getEffectiveTypeRoots(options, host.getCurrentDirectory && host.getCurrentDirectory());
             if (typeRoots) {
                 for (const root of typeRoots) {
                     if (host.directoryExists(root)) {

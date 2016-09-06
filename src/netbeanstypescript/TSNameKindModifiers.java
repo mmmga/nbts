@@ -92,6 +92,7 @@ public class TSNameKindModifiers {
             case "alias": break;
             case "const": kind = ElementKind.CONSTANT; break;
             case "let": kind = ElementKind.VARIABLE; break;
+            case "directory": kind = ElementKind.PACKAGE; break;
             default: TSService.log.log(Level.WARNING, "Unknown symbol kind [{0}]", obj.get("kind"));
         }
 
